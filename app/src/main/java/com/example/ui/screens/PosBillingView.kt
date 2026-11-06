@@ -47,7 +47,9 @@ fun PosBillingView(
     var selectedPaymentMethod by remember { mutableStateOf(PaymentMethod.UPI_QR) }
     var customerPhone by remember { mutableStateOf("") }
 
-    val categories = listOf("All", "Kaju / Dry Fruit", "Pure Desi Ghee", "Mawa Sweets", "Syrup & Ras", "Namkeen & Snacks")
+    val categories = remember(uiState.catalog) {
+        listOf("All") + uiState.catalog.map { it.category }.distinct()
+    }
 
     val filteredItems = uiState.catalog.filter { item ->
         val matchesCategory = uiState.selectedCategory == "All" || item.category == uiState.selectedCategory
@@ -237,7 +239,7 @@ fun PosBillingView(
                             .testTag("search_sweets_input")
                     )
 
-                    // Price Making / Add Sweet Button
+                    // Price Making / Add Food Button with Writer Icon
                     Button(
                         onClick = onAddSweetClick,
                         colors = ButtonDefaults.buttonColors(containerColor = NeonGold, contentColor = SlateDarkBackground),
@@ -245,19 +247,40 @@ fun PosBillingView(
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 12.dp),
                         modifier = Modifier.testTag("price_making_button")
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.DriveFileRenameOutline, contentDescription = "Write Food Category & Price", modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
                         Text("Price Making", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            // Category Filter Pills
+            // Category Filter Pills with Writer Icon Shortcut
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(vertical = 2.dp)
                 ) {
+                    // Quick Action: Write Category
+                    item {
+                        OutlinedButton(
+                            onClick = onAddSweetClick,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = CyberCyan.copy(alpha = 0.12f),
+                                contentColor = CyberCyan
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CyberCyan.copy(alpha = 0.4f)),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier
+                                .height(32.dp)
+                                .testTag("write_food_category_pill")
+                        ) {
+                            Icon(Icons.Default.DriveFileRenameOutline, contentDescription = "Write Food Category", modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Write Category", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
                     items(categories) { category ->
                         val isSelected = uiState.selectedCategory == category
                         FilterChip(

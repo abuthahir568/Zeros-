@@ -6,8 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Sell
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,12 +30,25 @@ fun AddEditSweetDialog(
     val isEditMode = existingSweet != null
 
     var name by remember { mutableStateOf(existingSweet?.name ?: "") }
-    var category by remember { mutableStateOf(existingSweet?.category ?: "Kaju / Dry Fruit") }
+    var isCustomCategoryMode by remember { mutableStateOf(false) }
+    var selectedPresetCategory by remember { mutableStateOf(existingSweet?.category ?: "Kaju / Dry Fruit") }
+    var customCategoryText by remember { mutableStateOf("") }
     var priceStr by remember { mutableStateOf(existingSweet?.pricePerKg?.toInt()?.toString() ?: "850") }
     var stockStr by remember { mutableStateOf(existingSweet?.stockKg?.toInt()?.toString() ?: "50") }
     var description by remember { mutableStateOf(existingSweet?.description ?: "") }
 
-    val categories = listOf("Kaju / Dry Fruit", "Pure Desi Ghee", "Mawa Sweets", "Syrup & Ras", "Namkeen & Snacks")
+    val presetCategories = listOf(
+        "Kaju / Dry Fruit",
+        "Pure Desi Ghee",
+        "Mawa Sweets",
+        "Syrup & Ras",
+        "Namkeen & Snacks",
+        "Sugar-Free Sweets",
+        "Bengali Chhena",
+        "Bakery & Cookies"
+    )
+
+    val finalCategory = if (isCustomCategoryMode) customCategoryText.trim() else selectedPresetCategory
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -52,6 +64,7 @@ fun AddEditSweetDialog(
                     .padding(20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
+                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -111,38 +124,104 @@ fun AddEditSweetDialog(
                 if (!isEditMode) {
                     Spacer(Modifier.height(12.dp))
 
-                    Text("Food Category:", color = TextSecondary, fontSize = 12.sp)
-                    Spacer(Modifier.height(4.dp))
-                    var catMenuExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = catMenuExpanded,
-                        onExpandedChange = { catMenuExpanded = it }
+                    // Food Category with Writer Icon
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        Text("Food Category:", color = TextSecondary, fontSize = 12.sp)
+
+                        // Writer Icon Toggle Button
+                        OutlinedButton(
+                            onClick = { isCustomCategoryMode = !isCustomCategoryMode },
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (isCustomCategoryMode) CyberCyan.copy(alpha = 0.15f) else SlateCardSurface,
+                                contentColor = if (isCustomCategoryMode) CyberCyan else TextSecondary
+                            ),
+                            border = androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (isCustomCategoryMode) CyberCyan else SlateBorder
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier
+                                .height(28.dp)
+                                .testTag("toggle_food_category_writer_button")
+                        ) {
+                            Icon(
+                                if (isCustomCategoryMode) Icons.Default.FormatListBulleted else Icons.Default.DriveFileRenameOutline,
+                                contentDescription = "Food Category Writer Icon",
+                                modifier = Modifier.size(13.dp),
+                                tint = if (isCustomCategoryMode) CyberCyan else NeonGold
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                if (isCustomCategoryMode) "Preset List" else "Write Category",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+
+                    if (isCustomCategoryMode) {
+                        // Custom Food Category Writer input
                         OutlinedTextField(
-                            value = category,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = catMenuExpanded) },
+                            value = customCategoryText,
+                            onValueChange = { customCategoryText = it },
+                            label = { Text("Write Custom Food Category") },
+                            placeholder = { Text("e.g. Sugar-Free Sweets, Chhena, Bakery...") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.DriveFileRenameOutline,
+                                    contentDescription = "Food Category Writer Icon",
+                                    tint = CyberCyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .menuAnchor(),
+                                .testTag("custom_food_category_input"),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = CyberCyan,
                                 unfocusedBorderColor = SlateBorder
                             )
                         )
-                        ExposedDropdownMenu(
+                    } else {
+                        // Preset dropdown menu
+                        var catMenuExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(
                             expanded = catMenuExpanded,
-                            onDismissRequest = { catMenuExpanded = false }
+                            onExpandedChange = { catMenuExpanded = it }
                         ) {
-                            categories.forEach { cat ->
-                                DropdownMenuItem(
-                                    text = { Text(cat) },
-                                    onClick = {
-                                        category = cat
-                                        catMenuExpanded = false
-                                    }
+                            OutlinedTextField(
+                                value = selectedPresetCategory,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = catMenuExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = CyberCyan,
+                                    unfocusedBorderColor = SlateBorder
                                 )
+                            )
+                            ExposedDropdownMenu(
+                                expanded = catMenuExpanded,
+                                onDismissRequest = { catMenuExpanded = false }
+                            ) {
+                                presetCategories.forEach { cat ->
+                                    DropdownMenuItem(
+                                        text = { Text(cat) },
+                                        onClick = {
+                                            selectedPresetCategory = cat
+                                            catMenuExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -185,8 +264,9 @@ fun AddEditSweetDialog(
                             onUpdatePrice(existingSweet.id, price)
                         } else {
                             val stock = stockStr.toDoubleOrNull() ?: 50.0
+                            val catToSave = if (finalCategory.isNotBlank()) finalCategory else "Special Sweets"
                             if (name.isNotBlank()) {
-                                onSaveNew(name, category, price, stock, description)
+                                onSaveNew(name, catToSave, price, stock, description)
                             }
                         }
                     },
@@ -196,7 +276,7 @@ fun AddEditSweetDialog(
                     colors = ButtonDefaults.buttonColors(containerColor = NeonGold, contentColor = SlateDarkBackground)
                 ) {
                     Text(
-                        if (isEditMode) "Save New Price (₹$priceStr/kg)" else "Create Sweet & Set Price",
+                        if (isEditMode) "Save New Price (₹$priceStr/kg)" else "Create Food Item & Set Price",
                         fontWeight = FontWeight.Bold
                     )
                 }
