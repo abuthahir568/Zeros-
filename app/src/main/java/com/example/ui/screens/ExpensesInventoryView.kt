@@ -7,9 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,7 +16,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.model.ExpenseCategory
 import com.example.ui.theme.*
 import com.example.viewmodel.SweetPosUiState
 import java.text.SimpleDateFormat
@@ -32,20 +29,21 @@ fun ExpensesInventoryView(
     val timeFormat = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault())
 
     val rawMaterialTotal = uiState.expenses.filter {
-        it.category in listOf(
-            ExpenseCategory.RAW_MATERIAL_GHEE,
-            ExpenseCategory.RAW_MATERIAL_MAWA,
-            ExpenseCategory.RAW_MATERIAL_DRYFRUITS,
-            ExpenseCategory.RAW_MATERIAL_SUGAR_KESAR
-        )
+        it.category.contains("Ghee", true) ||
+        it.category.contains("Mawa", true) ||
+        it.category.contains("Cashew", true) ||
+        it.category.contains("Sugar", true) ||
+        it.category.contains("Raw", true) ||
+        it.category.contains("Dry", true)
     }.sumOf { it.amount }
 
-    val utilitiesAndRentTotal = uiState.expenses.filter {
-        it.category in listOf(
-            ExpenseCategory.PACKAGING_BOXES,
-            ExpenseCategory.ELECTRICITY_UTILITIES,
-            ExpenseCategory.SHOP_RENT_MAINTENANCE
-        )
+    val otherExpensesTotal = uiState.expenses.filter {
+        !it.category.contains("Ghee", true) &&
+        !it.category.contains("Mawa", true) &&
+        !it.category.contains("Cashew", true) &&
+        !it.category.contains("Sugar", true) &&
+        !it.category.contains("Raw", true) &&
+        !it.category.contains("Dry", true)
     }.sumOf { it.amount }
 
     LazyColumn(
@@ -87,6 +85,7 @@ fun ExpensesInventoryView(
                             )
                         }
 
+                        // Writer Icon & Log Expense Button
                         Button(
                             onClick = onAddExpenseClick,
                             colors = ButtonDefaults.buttonColors(containerColor = CrimsonExpense, contentColor = TextPrimary),
@@ -94,9 +93,9 @@ fun ExpensesInventoryView(
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.testTag("add_expense_fab")
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.DriveFileRenameOutline, contentDescription = "Write Expense Icon", modifier = Modifier.size(15.dp))
                             Spacer(Modifier.width(4.dp))
-                            Text("Log Expense", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Write Expense", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -111,8 +110,8 @@ fun ExpensesInventoryView(
                             Text("₹${String.format("%,.0f", rawMaterialTotal)}", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                         Column {
-                            Text("Packaging & Utilities", color = TextMuted, fontSize = 11.sp)
-                            Text("₹${String.format("%,.0f", utilitiesAndRentTotal)}", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("Utilities, Rent & Custom", color = TextMuted, fontSize = 11.sp)
+                            Text("₹${String.format("%,.0f", otherExpensesTotal)}", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                         }
                     }
 
@@ -129,7 +128,7 @@ fun ExpensesInventoryView(
                         Icon(Icons.Default.Info, contentDescription = null, tint = CyberCyan, modifier = Modifier.size(14.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "All logged expenses are deducted dynamically from the Admin Live Dashboard P&L.",
+                            "Tap 'Write Expense' with ✍️ icon to select or write any custom category name.",
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
@@ -139,13 +138,48 @@ fun ExpensesInventoryView(
         }
 
         item {
-            Text(
-                "RECENT SHOP & INVENTORY EXPENSES",
-                color = TextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 13.sp,
-                letterSpacing = 0.5.sp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "RECENT SHOP & INVENTORY EXPENSES",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.sp,
+                    letterSpacing = 0.5.sp
+                )
+                Text(
+                    "${uiState.expenses.size} Entries",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+        }
+
+        if (uiState.expenses.isEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, SlateBorder, RoundedCornerShape(12.dp)),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = SlateCardSurface)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(Icons.Default.ReceiptLong, contentDescription = null, tint = TextMuted, modifier = Modifier.size(32.dp))
+                        Spacer(Modifier.height(8.dp))
+                        Text("No Expenses Logged (₹0.00)", color = TextPrimary, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text("Tap 'Write Expense' to log raw materials or custom shop expenses.", color = TextMuted, fontSize = 11.sp)
+                    }
+                }
+            }
         }
 
         items(uiState.expenses) { exp ->
@@ -201,7 +235,7 @@ fun ExpensesInventoryView(
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                exp.category.name.replace("RAW_MATERIAL_", "").replace("_", " "),
+                                exp.category,
                                 color = TextSecondary,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold

@@ -396,7 +396,7 @@ class SweetPosViewModel : ViewModel() {
     }
 
     // Expenses & Inventory
-    fun addExpense(shopId: String, category: ExpenseCategory, description: String, amount: Double, loggedBy: String) {
+    fun addExpense(shopId: String, category: String, description: String, amount: Double, loggedBy: String) {
         val targetShop = _uiState.value.shops.find { it.id == shopId } ?: _uiState.value.shops.first()
         val newExp = Expense(
             id = "exp_${System.currentTimeMillis()}",

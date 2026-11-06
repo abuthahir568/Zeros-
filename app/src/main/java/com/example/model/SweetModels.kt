@@ -88,7 +88,7 @@ data class Expense(
     val id: String,
     val shopId: String,
     val shopName: String,
-    val category: ExpenseCategory,
+    val category: String,
     val description: String,
     val amount: Double,
     val loggedBy: String,
