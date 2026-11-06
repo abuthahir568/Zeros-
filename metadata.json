@@ -1,0 +1,8 @@
+{
+  "name": "Zeros ",
+  "description": "Centralized POS, Inventory & Employee Management System for sweet shop chain with real-time multi-branch sync and neo-noir dark aesthetics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
