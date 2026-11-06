@@ -255,7 +255,7 @@ fun AdminDashboardView(
         }
 
         // Branch Grid Cards with Delete Shop Action
-        items(uiState.shops) { shop ->
+        items(uiState.shopsWithLiveSales) { shop ->
             val progress = (shop.todaySales / shop.dailyTarget).toFloat().coerceIn(0f, 1f)
             Card(
                 modifier = Modifier

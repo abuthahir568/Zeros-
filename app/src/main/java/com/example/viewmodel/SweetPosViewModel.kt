@@ -38,19 +38,35 @@ data class SweetPosUiState(
     val syncNotification: String? = null
 ) {
     val currentShop: SweetShop
-        get() = shops.find { it.id == selectedShopId } ?: shops.firstOrNull() ?: SweetShop(
-            id = "shop_default",
-            name = "Main Sweet Hub",
-            code = "SW-01",
-            locality = "Central City",
-            phone = "+91 98000 00000",
-            manager = "Store Manager",
-            dailyTarget = 100000.0
-        )
+        get() {
+            val base = shops.find { it.id == selectedShopId } ?: shops.firstOrNull() ?: SweetShop(
+                id = "shop_default",
+                name = "Main Sweet Hub",
+                code = "SW-01",
+                locality = "Central City",
+                phone = "+91 98000 00000",
+                manager = "Store Manager",
+                dailyTarget = 100000.0
+            )
+            val shopBills = bills.filter { it.shopId == base.id }
+            return base.copy(
+                todaySales = shopBills.sumOf { it.grandTotal },
+                todayBillsCount = shopBills.size
+            )
+        }
 
-    // Aggregate Calculations
+    val shopsWithLiveSales: List<SweetShop>
+        get() = shops.map { s ->
+            val shopBills = bills.filter { it.shopId == s.id }
+            s.copy(
+                todaySales = shopBills.sumOf { it.grandTotal },
+                todayBillsCount = shopBills.size
+            )
+        }
+
+    // Pure Dynamic Calculations: Starts at ZERO on app open, auto-calculates on every bill
     val totalRevenue: Double
-        get() = shops.sumOf { it.todaySales } + bills.sumOf { it.grandTotal }
+        get() = bills.sumOf { it.grandTotal }
 
     val totalExpenses: Double
         get() = expenses.sumOf { it.amount }
